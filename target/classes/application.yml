@@ -1,0 +1,18 @@
+server:
+  port: ${PORT:8080}
+
+notion:
+  token: ${NOTION_TOKEN}
+  database-id: ${NOTION_DATABASE_ID}
+  api-version: "2022-06-28"
+
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+
+spring:
+  cache:
+    type: simple
+
+logging:
+  level:
+    com.noticiasuai: ${LOG_LEVEL:INFO}
