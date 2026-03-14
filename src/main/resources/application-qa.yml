@@ -1,0 +1,8 @@
+spring:
+  cache:
+    type: simple
+
+logging:
+  level:
+    com.noticiasuai: ${LOG_LEVEL:DEBUG}
+    org.springframework.web: DEBUG

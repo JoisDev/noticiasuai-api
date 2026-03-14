@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+
+  # ── Ambiente MAIN (producción) ──
+  app-main:
+    build: .
+    container_name: noticias-main
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.main
+    environment:
+      - SPRING_PROFILES_ACTIVE=main
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/categorias"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── Ambiente QA (pruebas) ──
+  app-qa:
+    build: .
+    container_name: noticias-qa
+    ports:
+      - "8081:8080"
+    env_file:
+      - .env.qa
+    environment:
+      - SPRING_PROFILES_ACTIVE=qa
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/categorias"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
