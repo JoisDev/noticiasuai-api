@@ -3,268 +3,204 @@ package com.noticiasuai;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class NotionMapper {
 
-    public NoticiaResumenDto toResumen(JsonNode page) {
-        JsonNode props = page.get("properties");
+    private final NotionClient notionClient;
 
-        return new NoticiaResumenDto(
-                page.get("id").asText(),
-                extraerTitle(props, "Título"),
-                extraerTexto(props, "Slug"),
-                extraerTexto(props, "Resumen"),
-                extraerSelect(props, "Categoría"),
-                extraerTexto(props, "Autor"),
-                extraerFecha(props, "Fecha de publicación"),
-                extraerArchivo(props, "Portada"),
-                extraerCheckbox(props, "Destacada")
-        );
+    public NotionMapper(NotionClient notionClient) {
+        this.notionClient = notionClient;
     }
 
-    public NoticiaDto toCompleta(JsonNode page, JsonNode bloques) {
+    public NoticiaEntity toEntity(JsonNode page) {
         JsonNode props = page.get("properties");
+        NoticiaEntity e = new NoticiaEntity();
 
-        return new NoticiaDto(
-                page.get("id").asText(),
-                extraerTitle(props, "Título"),
-                extraerTexto(props, "Slug"),
-                extraerTexto(props, "Resumen"),
-                bloquesAHtml(bloques),
-                extraerSelect(props, "Categoría"),
-                extraerTexto(props, "Autor"),
-                extraerFecha(props, "Fecha de publicación"),
-                extraerArchivo(props, "Portada"),
-                extraerUrl(props, "Video"),
-                extraerCheckbox(props, "Destacada"),
-                extraerMultiSelect(props, "Etiquetas")
-        );
+        e.setId(page.get("id").asText());
+        e.setTitulo(extraerTitle(props, "Título"));
+        e.setSlug(extraerTexto(props, "Slug"));
+        e.setResumen(extraerTexto(props, "Resumen"));
+        e.setCategoria(extraerSelect(props, "Categoría"));
+        e.setAutor(extraerTexto(props, "Autor"));
+        e.setEstado(extraerSelect(props, "Estado"));
+        e.setDestacada(extraerCheckbox(props, "Destacada"));
+        e.setVideoUrl(extraerUrl(props, "Video"));
+        e.setEtiquetas(extraerMultiSelectAsString(props, "Etiquetas"));
+
+        String fecha = extraerFecha(props, "Fecha de publicación");
+        if (fecha != null) {
+            try { e.setFechaPublicacion(LocalDate.parse(fecha)); }
+            catch (Exception ex) { /* fecha inválida, se deja null */ }
+        }
+
+        // Descargar portada y convertir a base64
+        String portadaUrl = extraerArchivo(props, "Portada");
+        if (portadaUrl != null) {
+            e.setPortadaBase64(notionClient.downloadImageAsBase64(portadaUrl));
+        }
+
+        // Leer bloques (contenido) y convertir a HTML
+        JsonNode bloques = notionClient.getBlocks(e.getId());
+        e.setContenido(bloquesAHtml(bloques));
+
+        e.setUltimoSync(LocalDateTime.now());
+        return e;
     }
 
-    // ── Extractores de propiedades de Notion ──
-    // Cada tipo de propiedad en Notion tiene una estructura JSON diferente
+    // ── Extractores ──
 
-    private String extraerTitle(JsonNode props, String nombre) {
+    private String extraerTitle(JsonNode props, String name) {
         try {
-            JsonNode arr = props.get(nombre).get("title");
+            JsonNode arr = props.get(name).get("title");
             if (arr == null || arr.isEmpty()) return "";
             return arr.get(0).get("plain_text").asText();
-        } catch (Exception e) {
-            return "";
-        }
+        } catch (Exception e) { return ""; }
     }
 
-    private String extraerTexto(JsonNode props, String nombre) {
+    private String extraerTexto(JsonNode props, String name) {
         try {
-            JsonNode arr = props.get(nombre).get("rich_text");
+            JsonNode arr = props.get(name).get("rich_text");
             if (arr == null || arr.isEmpty()) return "";
             StringBuilder sb = new StringBuilder();
-            for (JsonNode fragmento : arr) {
-                sb.append(fragmento.get("plain_text").asText());
-            }
+            for (JsonNode f : arr) sb.append(f.get("plain_text").asText());
             return sb.toString();
-        } catch (Exception e) {
-            return "";
-        }
+        } catch (Exception e) { return ""; }
     }
 
-    private String extraerSelect(JsonNode props, String nombre) {
+    private String extraerSelect(JsonNode props, String name) {
         try {
-            JsonNode select = props.get(nombre).get("select");
-            if (select == null || select.isNull()) return null;
-            return select.get("name").asText();
-        } catch (Exception e) {
-            return null;
-        }
+            JsonNode sel = props.get(name).get("select");
+            if (sel == null || sel.isNull()) return null;
+            return sel.get("name").asText();
+        } catch (Exception e) { return null; }
     }
 
-    private List<String> extraerMultiSelect(JsonNode props, String nombre) {
-        List<String> result = new ArrayList<>();
+    private String extraerMultiSelectAsString(JsonNode props, String name) {
         try {
-            JsonNode arr = props.get(nombre).get("multi_select");
-            if (arr != null) {
-                for (JsonNode item : arr) {
-                    result.add(item.get("name").asText());
-                }
-            }
-        } catch (Exception ignored) {}
-        return result;
+            JsonNode arr = props.get(name).get("multi_select");
+            if (arr == null) return "";
+            List<String> tags = new ArrayList<>();
+            for (JsonNode item : arr) tags.add(item.get("name").asText());
+            return String.join(",", tags);
+        } catch (Exception e) { return ""; }
     }
 
-    private String extraerFecha(JsonNode props, String nombre) {
+    private String extraerFecha(JsonNode props, String name) {
         try {
-            JsonNode date = props.get(nombre).get("date");
+            JsonNode date = props.get(name).get("date");
             if (date == null || date.isNull()) return null;
             return date.get("start").asText();
-        } catch (Exception e) {
-            return null;
-        }
+        } catch (Exception e) { return null; }
     }
 
-    private boolean extraerCheckbox(JsonNode props, String nombre) {
-        try {
-            return props.get(nombre).get("checkbox").asBoolean();
-        } catch (Exception e) {
-            return false;
-        }
+    private boolean extraerCheckbox(JsonNode props, String name) {
+        try { return props.get(name).get("checkbox").asBoolean(); }
+        catch (Exception e) { return false; }
     }
 
-    private String extraerUrl(JsonNode props, String nombre) {
+    private String extraerUrl(JsonNode props, String name) {
         try {
-            JsonNode url = props.get(nombre).get("url");
+            JsonNode url = props.get(name).get("url");
             if (url == null || url.isNull()) return null;
             return url.asText();
-        } catch (Exception e) {
-            return null;
-        }
+        } catch (Exception e) { return null; }
     }
 
-    // Notion puede tener archivos subidos o enlaces externos
-    private String extraerArchivo(JsonNode props, String nombre) {
+    private String extraerArchivo(JsonNode props, String name) {
         try {
-            JsonNode files = props.get(nombre).get("files");
+            JsonNode files = props.get(name).get("files");
             if (files == null || files.isEmpty()) return null;
-
-            JsonNode primerArchivo = files.get(0);
-            String tipo = primerArchivo.get("type").asText();
-
-            if ("file".equals(tipo)) {
-                return primerArchivo.get("file").get("url").asText();
-            }
-            if ("external".equals(tipo)) {
-                return primerArchivo.get("external").get("url").asText();
-            }
+            JsonNode f = files.get(0);
+            String tipo = f.get("type").asText();
+            if ("file".equals(tipo)) return f.get("file").get("url").asText();
+            if ("external".equals(tipo)) return f.get("external").get("url").asText();
             return null;
-        } catch (Exception e) {
-            return null;
-        }
+        } catch (Exception e) { return null; }
     }
 
-    // ── Conversión de bloques de Notion a HTML ──
+    // ── Bloques a HTML ──
 
     private String bloquesAHtml(JsonNode bloques) {
         // TODO: faltan tipos: table, toggle, callout, code block
         if (bloques == null) return "";
-
         StringBuilder html = new StringBuilder();
 
         for (JsonNode bloque : bloques) {
             String tipo = bloque.get("type").asText();
-
             switch (tipo) {
                 case "paragraph":
-                    String texto = extraerTextoDeBloque(bloque.get("paragraph"));
-                    if (!texto.isBlank()) {
-                        html.append("<p>").append(texto).append("</p>\n");
-                    }
+                    String texto = richTextToHtml(bloque.get("paragraph"));
+                    if (!texto.isBlank()) html.append("<p>").append(texto).append("</p>\n");
                     break;
-
                 case "heading_1":
-                    html.append("<h1>")
-                        .append(extraerTextoDeBloque(bloque.get("heading_1")))
-                        .append("</h1>\n");
+                    html.append("<h1>").append(richTextToHtml(bloque.get("heading_1"))).append("</h1>\n");
                     break;
-
                 case "heading_2":
-                    html.append("<h2>")
-                        .append(extraerTextoDeBloque(bloque.get("heading_2")))
-                        .append("</h2>\n");
+                    html.append("<h2>").append(richTextToHtml(bloque.get("heading_2"))).append("</h2>\n");
                     break;
-
                 case "heading_3":
-                    html.append("<h3>")
-                        .append(extraerTextoDeBloque(bloque.get("heading_3")))
-                        .append("</h3>\n");
+                    html.append("<h3>").append(richTextToHtml(bloque.get("heading_3"))).append("</h3>\n");
                     break;
-
                 case "bulleted_list_item":
-                    // TODO: debería envolver los <li> consecutivos en <ul>...</ul>
-                    html.append("<li>")
-                        .append(extraerTextoDeBloque(bloque.get("bulleted_list_item")))
-                        .append("</li>\n");
+                    // TODO: envolver consecutivos en <ul>
+                    html.append("<li>").append(richTextToHtml(bloque.get("bulleted_list_item"))).append("</li>\n");
                     break;
-
                 case "numbered_list_item":
-                    html.append("<li>")
-                        .append(extraerTextoDeBloque(bloque.get("numbered_list_item")))
-                        .append("</li>\n");
+                    html.append("<li>").append(richTextToHtml(bloque.get("numbered_list_item"))).append("</li>\n");
                     break;
-
                 case "image":
-                    String imgUrl = extraerUrlDeImagen(bloque.get("image"));
+                    String imgUrl = extraerImagenDeBloque(bloque.get("image"));
                     if (imgUrl != null) {
-                        html.append("<img src=\"").append(imgUrl)
-                            .append("\" alt=\"\" style=\"max-width:100%\" />\n");
+                        // Convertir imagen del contenido a base64 también
+                        String base64 = notionClient.downloadImageAsBase64(imgUrl);
+                        if (base64 != null) {
+                            html.append("<img src=\"").append(base64).append("\" style=\"max-width:100%\" />\n");
+                        }
                     }
                     break;
-
                 case "quote":
-                    html.append("<blockquote>")
-                        .append(extraerTextoDeBloque(bloque.get("quote")))
-                        .append("</blockquote>\n");
+                    html.append("<blockquote>").append(richTextToHtml(bloque.get("quote"))).append("</blockquote>\n");
                     break;
-
                 case "divider":
                     html.append("<hr />\n");
                     break;
-
-                default:
-                    break;
+                default: break;
             }
         }
-
         return html.toString();
     }
 
-    // Extrae texto de un bloque respetando negritas, cursivas y links
-    private String extraerTextoDeBloque(JsonNode bloque) {
+    private String richTextToHtml(JsonNode bloque) {
         if (bloque == null) return "";
-
-        JsonNode richText = bloque.get("rich_text");
-        if (richText == null || richText.isEmpty()) return "";
-
+        JsonNode rt = bloque.get("rich_text");
+        if (rt == null || rt.isEmpty()) return "";
         StringBuilder sb = new StringBuilder();
-        for (JsonNode fragmento : richText) {
-            String texto = fragmento.get("plain_text").asText();
-
-            JsonNode annotations = fragmento.get("annotations");
-            if (annotations != null) {
-                if (annotations.get("bold").asBoolean()) {
-                    texto = "<strong>" + texto + "</strong>";
-                }
-                if (annotations.get("italic").asBoolean()) {
-                    texto = "<em>" + texto + "</em>";
-                }
-                if (annotations.get("code").asBoolean()) {
-                    texto = "<code>" + texto + "</code>";
-                }
+        for (JsonNode f : rt) {
+            String t = f.get("plain_text").asText();
+            JsonNode ann = f.get("annotations");
+            if (ann != null) {
+                if (ann.get("bold").asBoolean()) t = "<strong>" + t + "</strong>";
+                if (ann.get("italic").asBoolean()) t = "<em>" + t + "</em>";
+                if (ann.get("code").asBoolean()) t = "<code>" + t + "</code>";
             }
-
-            JsonNode href = fragmento.get("href");
-            if (href != null && !href.isNull()) {
-                texto = "<a href=\"" + href.asText() + "\" target=\"_blank\">" + texto + "</a>";
-            }
-
-            sb.append(texto);
+            JsonNode href = f.get("href");
+            if (href != null && !href.isNull()) t = "<a href=\"" + href.asText() + "\" target=\"_blank\">" + t + "</a>";
+            sb.append(t);
         }
         return sb.toString();
     }
 
-    private String extraerUrlDeImagen(JsonNode imagen) {
+    private String extraerImagenDeBloque(JsonNode imagen) {
         try {
             String tipo = imagen.get("type").asText();
-            if ("file".equals(tipo)) {
-                return imagen.get("file").get("url").asText();
-            }
-            if ("external".equals(tipo)) {
-                return imagen.get("external").get("url").asText();
-            }
+            if ("file".equals(tipo)) return imagen.get("file").get("url").asText();
+            if ("external".equals(tipo)) return imagen.get("external").get("url").asText();
             return null;
-        } catch (Exception e) {
-            return null;
-        }
+        } catch (Exception e) { return null; }
     }
 }

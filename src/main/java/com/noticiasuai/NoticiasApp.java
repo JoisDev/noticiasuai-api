@@ -10,8 +10,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class NoticiasApp {
 
-    // TODO: agregar endpoint de health check (/api/health)
-
     public static void main(String[] args) {
         SpringApplication.run(NoticiasApp.class, args);
     }

@@ -2,36 +2,68 @@ version: "3.8"
 
 services:
 
-  # ── Ambiente MAIN (producción) ──
+  # ── PostgreSQL ──
+  db:
+    image: postgres:16-alpine
+    container_name: waynoticias-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-waynoticias}
+      POSTGRES_USER: ${DB_USER:-waynoticias}
+      POSTGRES_PASSWORD: ${DB_PASS:-waynoticias123}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-waynoticias}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── App MAIN (producción) ──
   app-main:
     build: .
-    container_name: noticias-main
+    container_name: waynoticias-main
     ports:
       - "8080:8080"
     env_file:
       - .env.main
     environment:
       - SPRING_PROFILES_ACTIVE=main
+      - DB_HOST=db
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/categorias"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
 
-  # ── Ambiente QA (pruebas) ──
+  # ── App QA (pruebas) ──
   app-qa:
     build: .
-    container_name: noticias-qa
+    container_name: waynoticias-qa
     ports:
       - "8081:8080"
     env_file:
       - .env.qa
     environment:
       - SPRING_PROFILES_ACTIVE=qa
+      - DB_HOST=db
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/categorias"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+
+  # ── Nginx (proxy + HTML) ──
+  nginx:
+    image: nginx:alpine
+    container_name: waynoticias-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app-main
+    restart: unless-stopped
+
+volumes:
+  pgdata:

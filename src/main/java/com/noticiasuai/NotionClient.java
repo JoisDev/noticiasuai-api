@@ -29,67 +29,59 @@ public class NotionClient {
         this.rest = new RestTemplate();
     }
 
-    /**
-     * Consulta la base de datos de Notion.
-     * Filtra solo noticias con Estado = "publicado".
-     */
-    public JsonNode queryDatabase(String categoria) {
+    public JsonNode queryDatabase() {
         String url = BASE_URL + "/databases/" + databaseId + "/query";
-        String body = buildQueryBody(categoria);
-        HttpEntity<String> request = new HttpEntity<>(body, buildHeaders());
+        String body = "{\"filter\":{\"property\":\"Estado\",\"select\":{\"equals\":\"publicado\"}},"
+                + "\"sorts\":[{\"property\":\"Fecha de publicación\",\"direction\":\"descending\"}]}";
+        HttpEntity<String> request = new HttpEntity<>(body, headers());
 
         try {
-            ResponseEntity<JsonNode> response = rest.postForEntity(url, request, JsonNode.class);
-            return response.getBody().get("results");
+            ResponseEntity<JsonNode> resp = rest.postForEntity(url, request, JsonNode.class);
+            return resp.getBody().get("results");
         } catch (Exception e) {
-            log.error("Error consultando Notion database: {}", e.getMessage());
-            throw new RuntimeException("No se pudo conectar con Notion. Intente de nuevo.");
+            log.error("Error consultando Notion: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode getBlocks(String pageId) {
+        // TODO: paginar si hay más de 100 bloques
+        String url = BASE_URL + "/blocks/" + pageId + "/children?page_size=100";
+        HttpEntity<String> request = new HttpEntity<>(headers());
+
+        try {
+            ResponseEntity<JsonNode> resp = rest.exchange(url, HttpMethod.GET, request, JsonNode.class);
+            return resp.getBody().get("results");
+        } catch (Exception e) {
+            log.error("Error leyendo bloques {}: {}", pageId, e.getMessage());
+            return null;
         }
     }
 
     /**
-     * Lee los bloques (contenido) de una página: párrafos, imágenes, headings, etc.
+     * Descarga una imagen desde URL y la convierte a base64
      */
-    public JsonNode getBlocks(String pageId) {
-        // TODO: Notion pagina de 100 en 100. Si una noticia es muy larga
-        //       habría que usar "next_cursor" para traer más bloques.
-        String url = BASE_URL + "/blocks/" + pageId + "/children?page_size=100";
-        HttpEntity<String> request = new HttpEntity<>(buildHeaders());
-
+    public String downloadImageAsBase64(String imageUrl) {
         try {
-            ResponseEntity<JsonNode> response = rest.exchange(
-                    url, HttpMethod.GET, request, JsonNode.class);
-            return response.getBody().get("results");
+            ResponseEntity<byte[]> resp = rest.getForEntity(imageUrl, byte[].class);
+            if (resp.getBody() != null) {
+                String contentType = resp.getHeaders().getContentType() != null
+                        ? resp.getHeaders().getContentType().toString()
+                        : "image/png";
+                return "data:" + contentType + ";base64," +
+                        java.util.Base64.getEncoder().encodeToString(resp.getBody());
+            }
         } catch (Exception e) {
-            log.error("Error leyendo bloques de página {}: {}", pageId, e.getMessage());
-            throw new RuntimeException("No se pudo leer el contenido de la noticia.");
+            log.warn("No se pudo descargar imagen: {}", e.getMessage());
         }
+        return null;
     }
 
-    private HttpHeaders buildHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        headers.set("Notion-Version", apiVersion);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        return headers;
-    }
-
-    // TODO: esto se podría hacer más limpio con un Map<String, Object> y ObjectMapper
-    private String buildQueryBody(String categoria) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{");
-        sb.append("\"filter\":{\"and\":[");
-        sb.append("{\"property\":\"Estado\",\"select\":{\"equals\":\"publicado\"}}");
-
-        if (categoria != null && !categoria.isBlank()) {
-            sb.append(",{\"property\":\"Categoría\",\"select\":{\"equals\":\"")
-              .append(categoria.replace("\"", ""))
-              .append("\"}}");
-        }
-
-        sb.append("]},");
-        sb.append("\"sorts\":[{\"property\":\"Fecha de publicación\",\"direction\":\"descending\"}]");
-        sb.append("}");
-        return sb.toString();
+    private HttpHeaders headers() {
+        HttpHeaders h = new HttpHeaders();
+        h.setBearerAuth(token);
+        h.set("Notion-Version", apiVersion);
+        h.setContentType(MediaType.APPLICATION_JSON);
+        return h;
     }
 }

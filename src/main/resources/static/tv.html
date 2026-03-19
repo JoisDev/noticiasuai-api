@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Way Noticias — TV</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--mg:#E8007D;--rs:#FF4DB8;--bg:#f9f0f6;--dk:#2d0a1f;--wh:#fff}
+body{font-family:'Poppins',sans-serif;background:var(--dk);color:var(--wh);overflow:hidden;width:100vw;height:100vh}
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .8s;pointer-events:none}
+.slide.on{opacity:1;pointer-events:auto}
+.hdr{position:fixed;top:0;left:0;right:0;height:56px;background:var(--mg);display:flex;align-items:center;padding:0 28px;z-index:100;gap:12px}
+.hdr .w{width:36px;height:36px;background:var(--wh);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--mg)}
+.hdr h1{font-size:17px;font-weight:700}
+.hdr .clk{margin-left:auto;font-size:15px;font-weight:600;opacity:.9}
+
+.s-noticia{flex-direction:column;background-size:cover;background-position:center}
+.s-noticia .ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(45,10,31,.92),rgba(45,10,31,.35) 60%)}
+.s-noticia .ct{position:relative;z-index:1;padding:80px 50px 50px;max-width:860px;width:100%}
+.badge{background:var(--mg);color:var(--wh);padding:5px 16px;border-radius:18px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;display:inline-block;margin-bottom:14px}
+.s-noticia h2{font-size:clamp(30px,4vw,50px);font-weight:800;line-height:1.12;margin-bottom:12px}
+.s-noticia p{font-size:17px;opacity:.82;line-height:1.5;max-width:680px}
+.s-noticia .mt{margin-top:16px;font-size:13px;opacity:.55}
+
+.s-cumple{background:linear-gradient(135deg,var(--mg),var(--rs));flex-direction:column;text-align:center;padding:80px 40px}
+.s-cumple .ck{font-size:72px;margin-bottom:18px}
+.s-cumple h2{font-size:34px;font-weight:800;margin-bottom:22px}
+.s-cumple .ns{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+.s-cumple .nc{background:rgba(255,255,255,.2);backdrop-filter:blur(10px);padding:14px 26px;border-radius:14px;font-size:17px;font-weight:600}
+.s-cumple .nc small{display:block;font-size:12px;font-weight:400;opacity:.8;margin-top:4px}
+
+.s-frase{background:var(--bg);color:var(--dk);flex-direction:column;text-align:center;padding:80px 50px}
+.s-frase .wb{font-size:90px;margin-bottom:16px;width:120px;height:120px;background:var(--mg);color:var(--wh);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;margin:0 auto 20px}
+.s-frase blockquote{font-size:clamp(22px,3.2vw,40px);font-weight:700;line-height:1.4;max-width:780px;color:var(--mg)}
+.s-frase .au{margin-top:18px;font-size:16px;opacity:.55}
+
+.s-eventos{background:var(--dk);flex-direction:column;padding:80px 50px;width:100%}
+.s-eventos h2{font-size:30px;font-weight:800;color:var(--mg);margin-bottom:28px;text-align:center}
+.eg{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;width:100%}
+.ec{background:rgba(232,0,125,.08);border:2px solid var(--mg);border-radius:14px;padding:22px;width:270px;text-align:center}
+.ec .fe{font-size:13px;color:var(--rs);font-weight:600;margin-bottom:6px}
+.ec h3{font-size:17px;font-weight:700;margin-bottom:5px}
+.ec p{font-size:13px;opacity:.65}
+
+.s-vacante{background:linear-gradient(135deg,#1a0a12,var(--dk));flex-direction:column;text-align:center;padding:80px 50px}
+.s-vacante .lb{color:var(--rs);font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.s-vacante h2{font-size:40px;font-weight:800;margin-bottom:14px}
+.s-vacante .dp{font-size:18px;opacity:.65;margin-bottom:26px}
+.s-vacante .rqs{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.s-vacante .rq{background:rgba(232,0,125,.12);border:1px solid var(--mg);padding:9px 20px;border-radius:10px;font-size:13px}
+
+.s-clima{background:linear-gradient(135deg,#0a1628,#1a2a4a);flex-direction:column;text-align:center;padding:80px}
+.s-clima h2{font-size:22px;font-weight:600;opacity:.65;margin-bottom:8px}
+.s-clima .cy{font-size:18px;opacity:.45;margin-bottom:26px}
+.s-clima .tp{font-size:110px;font-weight:800;line-height:1;margin-bottom:8px;background:linear-gradient(var(--mg),var(--rs));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.s-clima .ds{display:flex;gap:36px;justify-content:center;margin-top:18px}
+.s-clima .dl{text-align:center}
+.s-clima .dl .v{font-size:22px;font-weight:700}
+.s-clima .dl .l{font-size:12px;opacity:.45}
+
+.s-semana{background:var(--bg);color:var(--dk);flex-direction:column;padding:80px 50px}
+.s-semana h2{font-size:36px;font-weight:800;line-height:1.2;margin-bottom:14px;max-width:680px}
+.s-semana p{font-size:17px;line-height:1.55;opacity:.65;max-width:630px}
+
+.pbar{position:fixed;bottom:0;left:0;height:3px;background:var(--mg);z-index:100}
+.dots{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:100}
+.dots span{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.25);transition:.3s}
+.dots span.on{background:var(--mg);transform:scale(1.2)}
+</style>
+</head>
+<body>
+<div class="hdr"><div class="w">W</div><h1>Way Noticias</h1><div class="clk" id="clk"></div></div>
+<div id="sl"></div>
+<div class="pbar" id="pb"></div>
+<div class="dots" id="dt"></div>
+<script>
+const INT=7000;let cur=0,sls=[],tmr;
+function clk(){const n=new Date();document.getElementById('clk').textContent=n.toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'})+' · '+n.toLocaleDateString('es-GT',{weekday:'long',day:'numeric',month:'long'})}
+setInterval(clk,1000);clk();
+
+const cumples=[{n:"María García",d:"Comunicación"},{n:"Carlos López",d:"TI"},{n:"Ana Pérez",d:"RRHH"}];
+const frases=[{t:"El éxito no es la clave de la felicidad. La felicidad es la clave del éxito.",a:"Albert Schweitzer"},{t:"La única forma de hacer un gran trabajo es amar lo que haces.",a:"Steve Jobs"},{t:"Juntos logramos más. ¡Sigamos adelante!",a:"Wayito"}];
+const eventos=[{f:"18 Mar",t:"Capacitación Excel Avanzado",l:"Sala A, 9:00 AM"},{f:"20 Mar",t:"Torneo de Futsal",l:"Cancha principal, 3:00 PM"},{f:"25 Mar",t:"Día de la Mujer",l:"Lobby, 10:00 AM"}];
+const vac={p:"Analista de Datos Jr.",d:"Departamento de Tecnología",r:["Excel intermedio","SQL básico","Power BI","Trabajo en equipo"]};
+
+function fd(d){if(!d)return'';try{return new Date(d+'T12:00:00').toLocaleDateString('es-GT',{day:'numeric',month:'long',year:'numeric'})}catch(e){return d}}
+
+async function load(){
+const c=document.getElementById('sl'),dt=document.getElementById('dt');sls=[];
+try{
+const r=await fetch('/api/noticias');const ns=await r.json();
+const dest=ns.find(n=>n.destacada)||ns[0];const sem=ns.find(n=>!n.destacada)||ns[1]||dest;
+
+if(dest)sls.push(`<div class="slide s-noticia" style="background-image:url('${dest.portadaBase64||''}')"><div class="ov"></div><div class="ct"><span class="badge">${dest.categoria||'Noticia'}</span><h2>${dest.titulo}</h2><p>${dest.resumen||''}</p><div class="mt">${dest.autor||''} · ${fd(dest.fechaPublicacion)}</div></div></div>`);
+
+sls.push(`<div class="slide s-cumple"><div class="ck">🎂</div><h2>¡Feliz cumpleaños esta semana!</h2><div class="ns">${cumples.map(c=>`<div class="nc">🎉 ${c.n}<small>${c.d}</small></div>`).join('')}</div></div>`);
+
+const fr=frases[Math.floor(Math.random()*frases.length)];
+sls.push(`<div class="slide s-frase"><div class="wb">W</div><blockquote>"${fr.t}"</blockquote><div class="au">— ${fr.a}</div></div>`);
+
+sls.push(`<div class="slide s-eventos"><h2>📅 Próximos Eventos</h2><div class="eg">${eventos.map(e=>`<div class="ec"><div class="fe">${e.f}</div><h3>${e.t}</h3><p>${e.l}</p></div>`).join('')}</div></div>`);
+
+sls.push(`<div class="slide s-vacante"><div class="lb">🚀 Vacante Interna</div><h2>${vac.p}</h2><div class="dp">${vac.d}</div><div class="rqs">${vac.r.map(r=>`<div class="rq">✓ ${r}</div>`).join('')}</div></div>`);
+
+sls.push(`<div class="slide s-clima"><h2>☀️ Clima Actual</h2><div class="cy">Ciudad de Guatemala</div><div class="tp" id="tp">--°</div><div class="ds"><div class="dl"><div class="v" id="hm">--%</div><div class="l">Humedad</div></div><div class="dl"><div class="v" id="wn">--</div><div class="l">Viento</div></div><div class="dl"><div class="v" id="uv">--</div><div class="l">UV</div></div></div></div>`);
+
+if(sem)sls.push(`<div class="slide s-semana"><span class="badge">📰 Noticia de la Semana</span><h2>${sem.titulo}</h2><p>${sem.resumen||''}</p></div>`);
+}catch(e){sls.push(`<div class="slide s-frase"><div class="wb">W</div><blockquote>Conectando con Way Noticias...</blockquote></div>`)}
+
+c.innerHTML=sls.join('');dt.innerHTML=sls.map((_,i)=>`<span class="${i===0?'on':''}"></span>`).join('');
+show(0);go();wx()
+}
+
+function show(i){document.querySelectorAll('.slide').forEach((s,j)=>s.classList.toggle('on',j===i));document.querySelectorAll('.dots span').forEach((d,j)=>d.classList.toggle('on',j===i));cur=i;const b=document.getElementById('pb');b.style.width='0%';b.style.transition='none';setTimeout(()=>{b.style.transition=`width ${INT}ms linear`;b.style.width='100%'},50)}
+function go(){clearInterval(tmr);tmr=setInterval(()=>show((cur+1)%sls.length),INT)}
+
+async function wx(){try{const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=14.6349&longitude=-90.5069&current=temperature_2m,relative_humidity_2m,wind_speed_10m,uv_index');const d=await r.json();const c=d.current;const t=document.getElementById('tp'),h=document.getElementById('hm'),w=document.getElementById('wn'),u=document.getElementById('uv');if(t)t.textContent=Math.round(c.temperature_2m)+'°C';if(h)h.textContent=c.relative_humidity_2m+'%';if(w)w.textContent=Math.round(c.wind_speed_10m)+' km/h';if(u)u.textContent=Math.round(c.uv_index)}catch(e){}}
+
+load();setInterval(load,300000);
+</script>
+</body>
+</html>

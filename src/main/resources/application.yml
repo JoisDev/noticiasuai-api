@@ -8,8 +8,17 @@ notion:
 
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  sync-interval: 300000  # 5 min
 
 spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:waynoticias}
+    username: ${DB_USER:waynoticias}
+    password: ${DB_PASS:waynoticias}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
   cache:
     type: simple
 

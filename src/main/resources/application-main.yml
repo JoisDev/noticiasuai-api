@@ -1,8 +1,4 @@
-spring:
-  cache:
-    type: simple
-
 logging:
   level:
-    com.noticiasuai: ${LOG_LEVEL:INFO}
+    com.noticiasuai: INFO
     org.springframework: WARN

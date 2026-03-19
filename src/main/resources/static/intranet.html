@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Way Noticias — Intranet</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--mg:#E8007D;--rs:#FF4DB8;--bg:#f9f0f6;--wh:#fff;--tx:#2d0a1f;--tx2:#6b3a55;--tx3:#a07088;--bd:#f0d6e6;--rad:14px}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--tx)}
+a{text-decoration:none;color:inherit}
+
+/* Nav */
+.nav{background:var(--wh);border-bottom:1px solid var(--bd);padding:0 24px;height:60px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100}
+.nav .w{width:38px;height:38px;background:var(--mg);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--wh);font-size:20px;font-weight:800;cursor:pointer}
+.nav .name{font-weight:700;font-size:16px;cursor:pointer}
+.nav .search{margin-left:auto;position:relative}
+.nav .search input{width:240px;height:36px;border:1.5px solid var(--bd);border-radius:20px;padding:0 16px 0 36px;font-family:inherit;font-size:13px;outline:none;background:var(--bg);transition:.2s}
+.nav .search input:focus{border-color:var(--mg);width:300px}
+.nav .search::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px}
+
+/* Hero */
+.hero{position:relative;height:400px;overflow:hidden;cursor:pointer}
+.hero img{width:100%;height:100%;object-fit:cover;transition:transform 3s}
+.hero:hover img{transform:scale(1.02)}
+.hero .ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(45,10,31,.88),rgba(45,10,31,.2) 60%)}
+.hero .ct{position:absolute;bottom:0;left:0;right:0;padding:36px 32px;color:var(--wh)}
+.badge{display:inline-block;padding:4px 14px;border-radius:8px;font-size:11px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.badge-mg{background:var(--mg);color:var(--wh)}
+.hero .ct h1{font-size:clamp(24px,3.5vw,38px);font-weight:800;line-height:1.15;margin:12px 0 10px;max-width:650px}
+.hero .ct p{font-size:15px;opacity:.8;max-width:550px;line-height:1.5}
+.hero .btn{display:inline-flex;align-items:center;gap:6px;margin-top:16px;padding:10px 22px;background:var(--wh);color:var(--tx);border-radius:10px;font-weight:600;font-size:13px;border:none;cursor:pointer;font-family:inherit;transition:.2s}
+.hero .btn:hover{background:var(--mg);color:var(--wh)}
+
+/* Section */
+.section{max-width:1100px;margin:0 auto;padding:32px 20px}
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.section-title{font-size:22px;font-weight:700}
+
+/* Filters */
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.fbtn{padding:6px 16px;border-radius:18px;border:1.5px solid var(--bd);background:var(--wh);font-size:12px;font-weight:500;cursor:pointer;transition:.2s;font-family:inherit;color:var(--tx2)}
+.fbtn:hover{border-color:var(--mg);color:var(--mg)}
+.fbtn.on{background:var(--mg);color:var(--wh);border-color:var(--mg)}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+
+/* Card */
+.card{background:var(--wh);border-radius:var(--rad);overflow:hidden;cursor:pointer;transition:.25s;border:1px solid var(--bd)}
+.card:hover{box-shadow:0 8px 30px rgba(232,0,125,.1);transform:translateY(-3px)}
+.card .img{position:relative;overflow:hidden;aspect-ratio:16/9.5}
+.card .img img{width:100%;height:100%;object-fit:cover;transition:transform .35s}
+.card:hover .img img{transform:scale(1.03)}
+.card .img .badge{position:absolute;top:10px;left:10px}
+.card .body{padding:16px 18px 18px}
+.card .body h3{font-size:16px;font-weight:700;line-height:1.3;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .body p{font-size:13px;color:var(--tx2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:10px}
+.card .foot{display:flex;justify-content:space-between;font-size:11px;color:var(--tx3);padding-top:10px;border-top:1px solid var(--bd)}
+
+/* Detail */
+.detail{max-width:740px;margin:0 auto;padding:0 20px 50px}
+.detail .hero-img{width:100%;height:340px;object-fit:cover;border-radius:0 0 var(--rad) var(--rad)}
+.detail .card{margin-top:-40px;position:relative;padding:32px 36px;border-radius:var(--rad)}
+.detail .back{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:500;color:var(--mg);cursor:pointer;margin-bottom:18px;border:none;background:none;font-family:inherit}
+.detail .back:hover{opacity:.7}
+.detail h1{font-size:clamp(22px,3vw,32px);font-weight:800;line-height:1.2;margin-bottom:12px}
+.detail .info{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--tx2);margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--bd)}
+.detail .tags{display:flex;gap:5px;flex-wrap:wrap}
+.detail .tag{font-size:10px;padding:3px 9px;border-radius:6px;background:var(--bg);color:var(--tx3);font-weight:500}
+.detail .video{margin:20px 0;border-radius:12px;overflow:hidden;aspect-ratio:16/9;background:#000}
+.detail .video iframe{width:100%;height:100%;border:none}
+.detail .html{font-size:15.5px;line-height:1.75;color:var(--tx)}
+.detail .html h2{font-size:20px;font-weight:700;margin:24px 0 10px}
+.detail .html p{margin-bottom:12px}
+.detail .html blockquote{border-left:3px solid var(--mg);padding:12px 20px;margin:20px 0;background:rgba(232,0,125,.05);border-radius:0 10px 10px 0;font-style:italic;color:var(--tx2)}
+.detail .html img{max-width:100%;border-radius:10px;margin:16px 0}
+.detail .html a{color:var(--mg)}
+
+/* Footer */
+.ftr{background:var(--wh);border-top:1px solid var(--bd);padding:22px;text-align:center;font-size:12px;color:var(--tx3)}
+
+/* No results */
+.empty{text-align:center;padding:60px;color:var(--tx3);font-size:15px}
+
+@media(max-width:768px){
+.hero{height:320px}
+.hero .ct{padding:24px 16px}
+.grid{grid-template-columns:1fr}
+.section{padding:24px 14px}
+.detail .card{padding:24px 20px}
+.nav .search input{width:160px}
+.nav .search input:focus{width:200px}
+.section-hdr{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <div class="w" onclick="goHome()">W</div>
+    <span class="name" onclick="goHome()">Way Noticias</span>
+    <div class="search"><input type="text" id="searchInput" placeholder="Buscar noticias..." oninput="buscar(this.value)"></div>
+</nav>
+
+<div id="app"></div>
+
+<footer class="ftr">© 2026 Agencias Way — Way Noticias · Portal interno</footer>
+
+<script>
+let noticias=[], categorias=[], filtro=null, busqueda='', vista='home', slugActual=null;
+
+function fd(d){if(!d)return'';try{return new Date(d+'T12:00:00').toLocaleDateString('es-GT',{day:'numeric',month:'long',year:'numeric'})}catch(e){return d}}
+
+async function init(){
+    try{
+        const [nr,cr]=await Promise.all([fetch('/api/noticias').then(r=>r.json()),fetch('/api/categorias').then(r=>r.json())]);
+        noticias=nr;categorias=cr;
+    }catch(e){noticias=[];categorias=[];console.error(e)}
+    render();
+}
+
+function render(){
+    const app=document.getElementById('app');
+    if(vista==='detail'){renderDetail(app);return}
+
+    let filtered=[...noticias];
+    if(filtro)filtered=filtered.filter(n=>n.categoria===filtro);
+    if(busqueda){const q=busqueda.toLowerCase();filtered=filtered.filter(n=>(n.titulo||'').toLowerCase().includes(q)||(n.resumen||'').toLowerCase().includes(q))}
+
+    const dest=!filtro&&!busqueda?filtered.find(n=>n.destacada):null;
+    const cards=dest?filtered.filter(n=>n.id!==dest.id):filtered;
+
+    let html='';
+
+    // Hero
+    if(dest){
+        html+=`<section class="hero" onclick="openDetail('${dest.slug}')">
+            <img src="${dest.portadaBase64||''}" alt="">
+            <div class="ov"></div>
+            <div class="ct">
+                <span class="badge badge-mg">${dest.categoria||''}</span>
+                <h1>${dest.titulo}</h1>
+                <p>${dest.resumen||''}</p>
+                <button class="btn">Leer más →</button>
+            </div>
+        </section>`;
+    }
+
+    // Section
+    html+=`<div class="section">
+        <div class="section-hdr">
+            <h2 class="section-title">${filtro?'Categoría: '+filtro:busqueda?'Resultados: "'+busqueda+'"':'Últimas noticias'}</h2>
+            <div class="filters">
+                <button class="fbtn ${!filtro?'on':''}" onclick="setFiltro(null)">Todas</button>
+                ${categorias.map(c=>`<button class="fbtn ${filtro===c?'on':''}" onclick="setFiltro('${c}')">${c}</button>`).join('')}
+            </div>
+        </div>`;
+
+    if(cards.length===0){
+        html+=`<div class="empty">No se encontraron noticias${busqueda?' para "'+busqueda+'"':''}.</div>`;
+    }else{
+        html+=`<div class="grid">`;
+        cards.forEach(n=>{
+            const catColors={Institucional:{bg:'#FDDDE6',tx:'#9B0054'},Salud:{bg:'#D1FAE5',tx:'#065F46'},RSE:{bg:'#FEF3C7',tx:'#92400E'},Eventos:{bg:'#EDE9FE',tx:'#5B21B6'}};
+            const cc=catColors[n.categoria]||{bg:'#FDDDE6',tx:'#9B0054'};
+            html+=`<article class="card" onclick="openDetail('${n.slug}')">
+                <div class="img">
+                    <img src="${n.portadaBase64||''}" alt="" loading="lazy">
+                    <span class="badge" style="background:${cc.bg};color:${cc.tx}">${n.categoria||''}</span>
+                </div>
+                <div class="body">
+                    <h3>${n.titulo}</h3>
+                    <p>${n.resumen||''}</p>
+                    <div class="foot"><span>${n.autor||''}</span><span>${fd(n.fechaPublicacion)}</span></div>
+                </div>
+            </article>`;
+        });
+        html+=`</div>`;
+    }
+    html+=`</div>`;
+    app.innerHTML=html;
+}
+
+async function renderDetail(app){
+    let n=noticias.find(x=>x.slug===slugActual);
+    // Si no tiene contenido, pedir detalle completo
+    if(!n||!n.contenido){
+        try{
+            const r=await fetch('/api/noticias/'+slugActual);
+            n=await r.json();
+        }catch(e){app.innerHTML='<div class="empty">Noticia no encontrada</div>';return}
+    }
+    if(!n){app.innerHTML='<div class="empty">Noticia no encontrada</div>';return}
+
+    const tags=(n.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
+
+    let html=`<div class="detail">
+        <img class="hero-img" src="${n.portadaBase64||''}" alt="">
+        <div class="card">
+            <button class="back" onclick="goHome()">← Volver a noticias</button>
+            <span class="badge badge-mg">${n.categoria||''}</span>
+            <h1>${n.titulo}</h1>
+            <div class="info">
+                <span>👤 ${n.autor||''}</span>
+                <span>📅 ${fd(n.fechaPublicacion)}</span>
+                ${tags?`<div class="tags">${tags}</div>`:''}
+            </div>`;
+
+    if(n.videoUrl){
+        let embedUrl=n.videoUrl;
+        if(embedUrl.includes('watch?v='))embedUrl=embedUrl.replace('watch?v=','embed/');
+        if(embedUrl.includes('youtu.be/'))embedUrl=embedUrl.replace('youtu.be/','youtube.com/embed/');
+        html+=`<div class="video"><iframe src="${embedUrl}" allowfullscreen></iframe></div>`;
+    }
+
+    html+=`<div class="html">${n.contenido||''}</div></div></div>`;
+    app.innerHTML=html;
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function setFiltro(c){filtro=c;busqueda='';document.getElementById('searchInput').value='';render()}
+function buscar(q){busqueda=q;filtro=null;render()}
+function openDetail(slug){slugActual=slug;vista='detail';render()}
+function goHome(){vista='home';slugActual=null;render();window.scrollTo({top:0,behavior:'smooth'})}
+
+init();
+</script>
+</body>
+</html>
